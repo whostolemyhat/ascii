@@ -20,7 +20,7 @@ fn pixel_to_char(pixel: Rgb, map_length: usize) -> usize {
 }
 
 fn main() {
-    let path = Path::new("img/gret.jpg");
+    let path = Path::new("img/pic-tiny.jpg");
     let img = image::open(path).unwrap();
     let width = img.width();
 
