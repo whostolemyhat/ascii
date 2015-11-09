@@ -1,13 +1,15 @@
 extern crate image;
 
 use std::fs::File;
+use std::io::prelude::*;
+use std::error::Error;
 use std::path::Path;
 
 use image::GenericImage;
 
 fn main() {
     // read in image
-    let path = &Path::new("/Users/james/Documents/rust/ascii/img/pic.jpg");
+    let path = &Path::new("/Users/james/Documents/rust/ascii/img/pic-small.png");
     let mut img = image::open(path).unwrap();
     let (width, height) = img.dimensions();
 
@@ -18,50 +20,38 @@ fn main() {
     // convert to greyscale
     let _ = img.grayscale().save(out, image::PNG).unwrap();
 
-    // split into zones
-    let zone_size = 10;
     let char_map = [".", ",", ":", ";", "o", "x", "%", "#", "@"];
     let map_length = char_map.len();
     let mut output = "".to_string();
-    output = output + "test\r\n";
+    output = output + "\r\n";
 
-    // step_by doesn't exist yet :(
-    // for x in (0..size.0).step_by(zone_size) {
-    for y in 0..(height) {
-        if y % zone_size == 0 {
-            println!("row {:?}", y / 10);
+    for (x, y, pixel) in img.pixels() {
+        println!("{:?}", pixel.data);
+        // let (r: f32, g: f32, b: f32) = pixel.data as f32;
+        let r = pixel.data[0] as f32;
+        let g = pixel.data[1] as f32;
+        let b = pixel.data[2] as f32;
 
-            for x in 0..(width) {
-                if x % zone_size == 0 {
-                    // println!("{:?}:{:?}", x, y);
-
-                    let sub_img = img.crop(x, y, x + zone_size, y + zone_size);
-                    // let ref mut out = File::create(&Path::new("/Users/james/Documents/rust/ascii/out/test.png")).unwrap();
-                    // let _ = sub_img.save(out, image::PNG);
-
-                    // get intensity of sub img
-                    // for pixel in sub_img
-                    let mut r: f32 = 0.0;
-                    let mut g: f32 = 0.0;
-                    let mut b: f32 = 0.0;
-                    let mut count = 0;
-                    for (x, y, pixel) in sub_img.pixels() {
-                        // println!("{:?}", pixel.data);
-                        r = r + pixel.data[0] as f32;
-                        g = g + pixel.data[1] as f32;
-                        b = b + pixel.data[2] as f32;
-
-                        count = count + 1;
-                    }
-                    // println!("{:?}, {:?}, {:?} / {:?}", r, g, b, count);
-                    println!("{:?}", (((r * 0.3) + (b * 0.3) + (g * 0.3)) / count as f32).floor());
-                    // add up all r, g, b vals
-                    // divide by number of pixels in sub_img = average
-                    // char_map[ (255 - average) * map_length/256 ] 
-                }
-            }
+        let average_shade = ((r * 0.3) + (b * 0.3) + (g * 0.3)).floor();
+        
+        let index = ((255.0 - average_shade) * (map_length as f32 / 256.0)).floor();
+        let character = char_map[ index as usize ];
+        output = output + character;
+        if x == width - 1 {
+            output = output + "\r\n";
         }
     }
 
-    // get intensity
+
+    println!("{:?}", output);
+
+    let path = Path::new("out/img.txt");
+    let display = path.display();
+
+    let mut file = match File::create(&path) {
+        Err(why) => panic!("Couldn't create {}: {}", display, Error::description(&why)),
+        Ok(file) => file
+    };
+    // try!(f.write_all(output));
+
 }
