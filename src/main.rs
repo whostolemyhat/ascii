@@ -6,44 +6,46 @@ use std::error::Error;
 use std::path::Path;
 
 use image::GenericImage;
+use image::Pixel;
+
+fn pixel_to_char(pixel: Pixel, map_length: usize) {
+    let r = pixel.data[0] as f32;
+    let g = pixel.data[1] as f32;
+    let b = pixel.data[2] as f32;
+
+    let average_shade = ((r * 0.3) + (b * 0.3) + (g * 0.3)).floor();
+    
+    ((255.0 - average_shade) * (map_length as f32 / 256.0)).floor()
+}
 
 fn main() {
     // read in image
-    let path = &Path::new("/Users/james/Documents/rust/ascii/img/pic-small.png");
-    let mut img = image::open(path).unwrap();
+    let path = &Path::new("/Users/james/Documents/rust/ascii/img/gret.jpg");
+    let img = image::open(path).unwrap();
     let (width, height) = img.dimensions();
-
-    println!("Size: {:?}, {:?}", width, height);
-
-    let ref mut out = File::create(&Path::new("/Users/james/Documents/rust/ascii/out/test.png")).unwrap();
-
-    // convert to greyscale
-    let _ = img.grayscale().save(out, image::PNG).unwrap();
 
     let char_map = [".", ",", ":", ";", "o", "x", "%", "#", "@"];
     let map_length = char_map.len();
     let mut output = "".to_string();
     output = output + "\r\n";
 
-    for (x, y, pixel) in img.pixels() {
-        println!("{:?}", pixel.data);
-        // let (r: f32, g: f32, b: f32) = pixel.data as f32;
-        let r = pixel.data[0] as f32;
-        let g = pixel.data[1] as f32;
-        let b = pixel.data[2] as f32;
+    for (x, _, pixel) in img.pixels() {
+        // let r = pixel.data[0] as f32;
+        // let g = pixel.data[1] as f32;
+        // let b = pixel.data[2] as f32;
 
-        let average_shade = ((r * 0.3) + (b * 0.3) + (g * 0.3)).floor();
+        // let average_shade = ((r * 0.3) + (b * 0.3) + (g * 0.3)).floor();
         
-        let index = ((255.0 - average_shade) * (map_length as f32 / 256.0)).floor();
-        let character = char_map[ index as usize ];
+        // let index = ((255.0 - average_shade) * (map_length as f32 / 256.0)).floor();
+        // let character = char_map[ index as usize ];
+        let character = char_map[ pixel_to_char(pixel, map_length) ];
         output = output + character;
+
         if x == width - 1 {
             output = output + "\r\n";
         }
     }
 
-
-    println!("{:?}", output);
 
     let path = Path::new("out/img.txt");
     let display = path.display();
@@ -52,6 +54,10 @@ fn main() {
         Err(why) => panic!("Couldn't create {}: {}", display, Error::description(&why)),
         Ok(file) => file
     };
-    // try!(f.write_all(output));
+
+    match file.write_all(output.as_bytes()) {
+        Err(why) => panic!("Couldn't write to {}: {}", display, Error::description(&why)),
+        Ok(_) => println!("Successfully saved to {}", display)
+    }
 
 }
