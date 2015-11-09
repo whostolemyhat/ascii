@@ -6,39 +6,36 @@ use std::error::Error;
 use std::path::Path;
 
 use image::GenericImage;
-use image::Pixel;
 
-fn pixel_to_char(pixel: Pixel, map_length: usize) {
-    let r = pixel.data[0] as f32;
-    let g = pixel.data[1] as f32;
-    let b = pixel.data[2] as f32;
+struct Rgb {
+    r: f32,
+    g: f32,
+    b: f32
+}
 
-    let average_shade = ((r * 0.3) + (b * 0.3) + (g * 0.3)).floor();
+fn pixel_to_char(pixel: Rgb, map_length: usize) -> usize {
+    let average_shade = ((pixel.r * 0.3) + (pixel.b * 0.3) + (pixel.g * 0.3)).floor();
     
-    ((255.0 - average_shade) * (map_length as f32 / 256.0)).floor()
+    ((255.0 - average_shade) * (map_length as f32 / 256.0)).floor() as usize
 }
 
 fn main() {
-    // read in image
-    let path = &Path::new("/Users/james/Documents/rust/ascii/img/gret.jpg");
+    let path = Path::new("img/gret.jpg");
     let img = image::open(path).unwrap();
-    let (width, height) = img.dimensions();
+    let width = img.width();
 
     let char_map = [".", ",", ":", ";", "o", "x", "%", "#", "@"];
     let map_length = char_map.len();
     let mut output = "".to_string();
-    output = output + "\r\n";
 
     for (x, _, pixel) in img.pixels() {
-        // let r = pixel.data[0] as f32;
-        // let g = pixel.data[1] as f32;
-        // let b = pixel.data[2] as f32;
+        let rgb = Rgb{
+            r: pixel.data[0] as f32,
+            g: pixel.data[1] as f32,
+            b: pixel.data[2] as f32
+        };
 
-        // let average_shade = ((r * 0.3) + (b * 0.3) + (g * 0.3)).floor();
-        
-        // let index = ((255.0 - average_shade) * (map_length as f32 / 256.0)).floor();
-        // let character = char_map[ index as usize ];
-        let character = char_map[ pixel_to_char(pixel, map_length) ];
+        let character = char_map[ pixel_to_char(rgb, map_length) ];
         output = output + character;
 
         if x == width - 1 {
@@ -47,10 +44,10 @@ fn main() {
     }
 
 
-    let path = Path::new("out/img.txt");
-    let display = path.display();
+    let output_path = Path::new("out/img.txt");
+    let display = output_path.display();
 
-    let mut file = match File::create(&path) {
+    let mut file = match File::create(&output_path) {
         Err(why) => panic!("Couldn't create {}: {}", display, Error::description(&why)),
         Ok(file) => file
     };
