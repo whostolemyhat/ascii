@@ -7,7 +7,7 @@ Creates an [ascii art](https://en.wikipedia.org/wiki/ASCII_art) (text-based) ima
 1. Install Rust
 1. Run `cargo run`
 
-![]("img/pic-tiny.jpg")
+![](img/pic-tiny.jpg)
 
 ```
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
